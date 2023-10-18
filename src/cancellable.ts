@@ -24,4 +24,49 @@
  */
 export function cancellable<T>(
   generator: Generator<Promise<any>, T, unknown>
-): [() => void, Promise<T>] {}
+): [() => void, Promise<T>] {
+  let cancel = () => {};
+  let promise = new Promise<T>((resolve, reject) => {
+    // resolve
+    function onFulfilled(value: unknown) {
+      let ret;
+      try {
+        ret = generator.next(value);
+      } catch (e) {
+        return reject(e);
+      }
+      next(ret);
+    }
+
+    // reject
+    function onRejected(err: unknown) {
+      let ret;
+      try {
+        ret = generator.throw(err);
+      } catch (e) {
+        return reject(e);
+      }
+      next(ret);
+    }
+
+    // next
+    function next(ret: IteratorResult<Promise<any>, T>) {
+      if (ret.done) return resolve(ret.value);
+      if (ret.value.then) ret.value.then(onFulfilled, onRejected);
+      else onFulfilled(ret.value);
+    }
+
+    cancel = () => onRejected("Cancelled");
+  });
+  return [cancel, promise];
+}
+
+// function* tasks(): any {
+//   const val = yield new Promise((resolve) => resolve(2 + 2));
+//   yield new Promise((resolve) => setTimeout(resolve, 100));
+//   return val + 1;
+// }
+
+// const [cancel, promise] = cancellable(tasks());
+// setTimeout(cancel, 50);
+// promise.catch(console.log); // logs "Cancelled" at t=50ms

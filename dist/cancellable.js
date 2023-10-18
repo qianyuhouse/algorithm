@@ -19,5 +19,50 @@ exports.cancellable = void 0;
  * @param {Generator} generator
  * @return {[Function, Promise]}
  */
-function cancellable(generator) { }
+function cancellable(generator) {
+    let cancel = () => { };
+    let promise = new Promise((resolve, reject) => {
+        // resolve
+        function onFulfilled(value) {
+            let ret;
+            try {
+                ret = generator.next(value);
+            }
+            catch (e) {
+                return reject(e);
+            }
+            next(ret);
+        }
+        // reject
+        function onRejected(err) {
+            let ret;
+            try {
+                ret = generator.throw(err);
+            }
+            catch (e) {
+                return reject(e);
+            }
+            next(ret);
+        }
+        // next
+        function next(ret) {
+            if (ret.done)
+                return resolve(ret.value);
+            if (ret.value.then)
+                ret.value.then(onFulfilled, onRejected);
+            else
+                onFulfilled(ret.value);
+        }
+        cancel = () => onRejected("Cancelled");
+    });
+    return [cancel, promise];
+}
 exports.cancellable = cancellable;
+// function* tasks(): any {
+//   const val = yield new Promise((resolve) => resolve(2 + 2));
+//   yield new Promise((resolve) => setTimeout(resolve, 100));
+//   return val + 1;
+// }
+// const [cancel, promise] = cancellable(tasks());
+// setTimeout(cancel, 50);
+// promise.catch(console.log); // logs "Cancelled" at t=50ms

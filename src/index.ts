@@ -1,9 +1,3 @@
-import { cancellable } from "./cancellable";
+import { chunk } from "./chunk";
 
-const [cancel, promise] = cancellable(
-  (function* () {
-    return 42;
-  })()
-);
-setTimeout(cancel, 100);
-promise.then(console.log); // 在 t=0ms 解析为 42
+console.log(chunk([1, 2, 3, 4, 5], 2));

@@ -1,8 +1,4 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const cancellable_1 = require("./cancellable");
-const [cancel, promise] = (0, cancellable_1.cancellable)((function* () {
-    return 42;
-})());
-setTimeout(cancel, 100);
-promise.then(console.log); // 在 t=0ms 解析为 42
+const chunk_1 = require("./chunk");
+console.log((0, chunk_1.chunk)([1, 2, 3, 4, 5], 2));

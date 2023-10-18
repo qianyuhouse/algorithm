@@ -23,10 +23,10 @@ function cancellable(generator) {
     let cancel = () => { };
     let promise = new Promise((resolve, reject) => {
         // resolve
-        function onFulfilled(value) {
+        function onFulfilled(res) {
             let ret;
             try {
-                ret = generator.next(value);
+                ret = generator.next(res);
             }
             catch (e) {
                 return reject(e);
@@ -53,6 +53,7 @@ function cancellable(generator) {
             else
                 onFulfilled(ret.value);
         }
+        onFulfilled();
         cancel = () => onRejected("Cancelled");
     });
     return [cancel, promise];

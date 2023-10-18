@@ -28,10 +28,10 @@ export function cancellable<T>(
   let cancel = () => {};
   let promise = new Promise<T>((resolve, reject) => {
     // resolve
-    function onFulfilled(value: unknown) {
+    function onFulfilled(res?: unknown) {
       let ret;
       try {
-        ret = generator.next(value);
+        ret = generator.next(res);
       } catch (e) {
         return reject(e);
       }
@@ -56,6 +56,7 @@ export function cancellable<T>(
       else onFulfilled(ret.value);
     }
 
+    onFulfilled();
     cancel = () => onRejected("Cancelled");
   });
   return [cancel, promise];
